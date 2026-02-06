@@ -25,3 +25,33 @@ $$x_{ij} = \begin{cases}
 0 & \text{en caso contrario}
 \end{cases}$$
 
+## Planteamiento del Problema
+### Función Objetivo
+*Minimizar la desviación de la carga respecto al ideal.* Buscamos que la suma de las diferencias (en valor absoluto) entre la carga real asignada y la carga objetivo ($T$) sea mínima para todo el equipo.
+
+$$\text{Min } Z = \sum_{i \in I} \left| \left( \sum_{j \in J} x_{ij} \cdot H_j \cdot \alpha_j \right) - T \right|$$
+
+Donde el término $\sum_{j \in J} x_{ij} \cdot H_j \cdot \alpha_j$ representa la Carga Ponderada Real del ingeniero $i$.
+
+### Restricciones
+
+1. *Restricción de Cobertura Total* Todos los servicios deben ser asignados a un ingeniero. No pueden quedar tareas sin responsable.
+
+$$\sum_{i \in I} x_{ij} = 1 \quad \forall j \in J$$
+
+2. *Restricción de Capacidad Máxima (Hard Limit)* La carga asignada a un ingeniero no puede exceder su capacidad física disponible.
+
+$$\sum_{j \in J} x_{ij} \cdot H_j \cdot \alpha_j \leq C_i \quad \forall i \in I$$
+
+3. *Restricción de Dominio* Las variables de decisión son binarias.
+
+$$x_{ij} \in \{0, 1\}$$
+
+## Interpretación de Resultados
+Al resolver este modelo, obtendremos una matriz de asignación $X$ que nos permitirá clasificar a los ingenieros en tres estados:
+
+1. *Subutilizado:* Carga Ponderada $< (T - \delta)$
+2. *Zona Óptima:* Carga Ponderada $\approx T$
+3. *Sobreutilizado:* Carga Ponderada $> (T + \delta)$ (pero siempre $\leq C_i$)
+
+Este enfoque asegura un balanceo equitativo considerando la dificultad real de las tareas y no solo el tiempo nominal.
