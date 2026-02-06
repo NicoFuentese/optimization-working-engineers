@@ -35,15 +35,15 @@ Donde el término $\sum_{j \in J} x_{ij} \cdot H_j \cdot \alpha_j$ representa la
 
 ### Restricciones
 
-1. *Restricción de Cobertura Total* Todos los servicios deben ser asignados a un ingeniero. No pueden quedar tareas sin responsable.
+1. *Restricción de Cobertura Total* -> Todos los servicios deben ser asignados a un ingeniero. No pueden quedar tareas sin responsable.
 
 $$\sum_{i \in I} x_{ij} = 1 \quad \forall j \in J$$
 
-2. *Restricción de Capacidad Máxima (Hard Limit)* La carga asignada a un ingeniero no puede exceder su capacidad física disponible.
+2. *Restricción de Capacidad Máxima (Hard Limit)* -> La carga asignada a un ingeniero no puede exceder su capacidad física disponible.
 
 $$\sum_{j \in J} x_{ij} \cdot H_j \cdot \alpha_j \leq C_i \quad \forall i \in I$$
 
-3. *Restricción de Dominio* Las variables de decisión son binarias.
+3. *Restricción de Dominio* -> Las variables de decisión son binarias.
 
 $$x_{ij} \in \{0, 1\}$$
 
