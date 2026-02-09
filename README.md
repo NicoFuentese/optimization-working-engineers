@@ -82,55 +82,60 @@ Al resolver este modelo, obtenemos un vector de **Alphas ($\alpha$)**:
 
 # Fase 2: Asignacion de Cargas
 
-## Definición del Modelo Matemático
+## 1. Objetivo
+Asignar servicios a ingenieros basándose en tres pilares:
+1.  **Capacidad:** Respetar las horas de contrato.
+2.  **Competencia:** Asignar tareas solo a quien tenga experiencia histórica demostrada.
+3.  **Equidad:** Balancear la carga de trabajo entre el equipo.
 
-### Conjuntos e Indices
-- $I$: Conjunto de Ingenieros disponibles ($i = 1, \dots, m$).
-- $J$: Conjunto de Servicios o Tareas a asignar ($j = 1, \dots, n$).
+## 2. Definición Matemática
 
-### Parametros (inputs)
-- $H_j$: Horas promedio estimadas requeridas para atender el servicio $j$.
-- $\alpha_j$: Factor de ponderación (peso/complejidad) del servicio $j$.
-    - $\alpha > 1$: Alta complejidad/criticidad.
-    - $\alpha = 1$: Complejidad estándar.
-- $C_i$: Capacidad máxima de horas disponibles del ingeniero $i$ (ej. 40 horas semanales).
-- $T$: Carga objetivo ideal (Target Workload). Representa el punto óptimo de productividad (ej. 80% de la capacidad total).
+### 2.1 Parámetros (Inputs)
+* **$W_j$**: Carga Efectiva del servicio ($H_j \cdot \alpha_j^*$).
+* **$C_i$**: Capacidad máxima del ingeniero $i$ (Horas Contrato).
+* **$S_{ij}$**: **Matriz de Habilidades (Skills Matrix)**.
+    * $1$ si el ingeniero $i$ ha realizado el servicio $j$ anteriormente.
+    * $0$ si no tiene experiencia registrada.
+* **$T$**: Target Dinámico ($\sum W_j / |I|$).
 
-### Variables de Decision
-Definimos una variable binaria que determina la asignación:
+### 2.2 Variables de Decisión
+* **$x_{ij} \in \{0, 1\}$**: Asignación (1 = Asignado).
+* **$d_i \ge 0$**: Desviación de carga respecto al promedio.
+* **$HE_i \ge 0$**: Horas Extra virtuales necesarias para completar el trabajo.
 
-$$x_{ij} = \begin{cases} 
-1 & \text{si el ingeniero } i \text{ es asignado al servicio } j \\
-0 & \text{en caso contrario}
-\end{cases}$$
+### 2.3 Modelo (MILP)
 
-## Planteamiento del Problema
-### Función Objetivo
-*Minimizar la desviación de la carga respecto al ideal.* Buscamos que la suma de las diferencias (en valor absoluto) entre la carga real asignada y la carga objetivo ($T$) sea mínima para todo el equipo.
+**Función Objetivo:**
+Prioridad 1: Minimizar Horas Extra (Costo $M$).
+Prioridad 2: Minimizar Desbalance (Equidad).
 
-$$\text{Min } Z = \sum_{i \in I} \left| \left( \sum_{j \in J} x_{ij} \cdot H_j \cdot \alpha_j \right) - T \right|$$
+$$
+\text{Min } Z = \sum_{i \in I} d_i + (1000 \cdot \sum_{i \in I} HE_i)
+$$
 
-Donde el término $\sum_{j \in J} x_{ij} \cdot H_j \cdot \alpha_j$ representa la Carga Ponderada Real del ingeniero $i$.
+**Restricciones:**
 
-### Restricciones
+1.  **Restricción de Competencia (Skills):**
+    Un ingeniero solo puede tomar un servicio si tiene la habilidad para hacerlo.
+    $$x_{ij} \leq S_{ij} \quad \forall i \in I, \forall j \in J$$
+    *(Si $S_{ij}=0$, obligamos a $x_{ij}$ a ser 0).*
 
-1. *Restricción de Cobertura Total* -> Todos los servicios deben ser asignados a un ingeniero. No pueden quedar tareas sin responsable.
+2.  **Cobertura Total:**
+    Cada servicio debe tener un responsable.
+    $$\sum_{i \in I} x_{ij} = 1 \quad \forall j \in J$$
 
-$$\sum_{i \in I} x_{ij} = 1 \quad \forall j \in J$$
+3.  **Capacidad con Holgura (Overtime):**
+    La carga asignada no puede superar la capacidad, salvo emergencia (Horas Extra).
+    $$\sum_{j \in J} (x_{ij} \cdot W_j) \leq C_i + HE_i \quad \forall i \in I$$
 
-2. *Restricción de Capacidad Máxima (Hard Limit)* -> La carga asignada a un ingeniero no puede exceder su capacidad física disponible.
+4.  **Balanceo (Cálculo de Desviación):**
+    $$\sum_{j \in J} (x_{ij} \cdot W_j) - T \leq d_i$$
+    $$T - \sum_{j \in J} (x_{ij} \cdot W_j) \leq d_i$$
 
-$$\sum_{j \in J} x_{ij} \cdot H_j \cdot \alpha_j \leq C_i \quad \forall i \in I$$
+---
+## 3. Construcción de la Matriz $S_{ij}$ (Data Processing)
+Para alimentar el parámetro $S_{ij}$, se utiliza el historial de tickets del año anterior:
 
-3. *Restricción de Dominio* -> Las variables de decisión son binarias.
-
-$$x_{ij} \in \{0, 1\}$$
-
-## Interpretación de Resultados
-Al resolver este modelo, obtendremos una matriz de asignación $X$ que nos permitirá clasificar a los ingenieros en tres estados:
-
-1. *Subutilizado:* Carga Ponderada $< (T - \delta)$
-2. *Zona Óptima:* Carga Ponderada $\approx T$
-3. *Sobreutilizado:* Carga Ponderada $> (T + \delta)$ (pero siempre $\leq C_i$)
-
-Este enfoque asegura un balanceo equitativo considerando la dificultad real de las tareas y no solo el tiempo nominal.
+1.  Se agrupan los datos por `(Ingeniero, Servicio)`.
+2.  Si `count > 0` (o un umbral mínimo, ej. > 3 veces), entonces $S_{ij} = 1$.
+3.  Caso contrario, $S_{ij} = 0$.
