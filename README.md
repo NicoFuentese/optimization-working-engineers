@@ -38,7 +38,7 @@ Son los datos pre-procesados provenientes del historial operativo.
 
 ---
 
-## 3. Planteamiento del Modelo (Linear Programming)
+## 3. Planteamiento del Modelo de Optimizacion
 
 ### Función Objetivo
 **Minimizar la Suma del Error Absoluto (Mean Absolute Error - MAE).**
@@ -83,17 +83,24 @@ Al resolver este modelo, obtenemos un vector de **Alphas ($\alpha$)**:
 # Fase 2: Asignacion de Cargas
 
 ## 1. Objetivo
-Asignar servicios a ingenieros basándose en tres pilares:
+El modelo asigna servicios a ingenieros basándose en tres pilares:
 1.  **Capacidad:** Respetar las horas de contrato.
 2.  **Competencia:** Asignar tareas solo a quien tenga experiencia histórica demostrada.
 3.  **Equidad:** Balancear la carga de trabajo entre el equipo.
 
-## 2. Definición Matemática
+---
+
+## 2. Definición del Modelo Matemático
+
+### 2.1 Conjuntos
+* $I$: Conjunto de Ingenieros ($i = 1, \dots, m$).
+* $J$: Conjunto de Servicios activos ($j = 1, \dots, n$).
 
 ### 2.1 Parámetros (Inputs)
 * **$W_j$**: Carga Efectiva del servicio ($H_j \cdot \alpha_j^*$).
+    * Calculada como: $W_j = H_j \times \alpha_j^*$ (Usando el $\alpha$ calibrado en Fase 1).
 * **$C_i$**: Capacidad máxima del ingeniero $i$ (Horas Contrato).
-* **$S_{ij}$**: **Matriz de Habilidades (Skills Matrix)**.
+* **$S_{ij}$**: **Matriz de Habilidades**.
     * $1$ si el ingeniero $i$ ha realizado el servicio $j$ anteriormente.
     * $0$ si no tiene experiencia registrada.
 * **$T$**: Target Dinámico ($\sum W_j / |I|$).
@@ -117,25 +124,59 @@ $$
 
 1.  **Restricción de Competencia (Skills):**
     Un ingeniero solo puede tomar un servicio si tiene la habilidad para hacerlo.
-    $$x_{ij} \leq S_{ij} \quad \forall i \in I, \forall j \in J$$
+
+    $$
+    x_{ij} \leq S_{ij} \quad \forall i \in I, \forall j \in J$$
     *(Si $S_{ij}=0$, obligamos a $x_{ij}$ a ser 0).*
+    $$
 
 2.  **Cobertura Total:**
     Cada servicio debe tener un responsable.
-    $$\sum_{i \in I} x_{ij} = 1 \quad \forall j \in J$$
+
+    $$
+    \sum_{i \in I} x_{ij} = 1 \quad \forall j \in J
+    $$
 
 3.  **Capacidad con Holgura (Overtime):**
     La carga asignada no puede superar la capacidad, salvo emergencia (Horas Extra).
-    $$\sum_{j \in J} (x_{ij} \cdot W_j) \leq C_i + HE_i \quad \forall i \in I$$
+
+    $$
+    \sum_{j \in J} (x_{ij} \cdot W_j) \leq C_i + HE_i \quad \forall i \in I
+    $$
 
 4.  **Balanceo (Cálculo de Desviación):**
-    $$\sum_{j \in J} (x_{ij} \cdot W_j) - T \leq d_i$$
-    $$T - \sum_{j \in J} (x_{ij} \cdot W_j) \leq d_i$$
+* Caso A (Carga superior al promedio):
+
+    $$
+    \sum_{j \in J} (x_{ij} \cdot W_j) - T \leq d_i
+    $$
+
+* Caso B (Carga inferior al promedio):
+
+    $$
+    T - \sum_{j \in J} (x_{ij} \cdot W_j) \leq d_i
+    $$
+
+** Dominio de Variables**
+
+$$x_{ij} \in \{0, 1\}, \quad d_i \geq 0, \quad HE_i \geq 0$$
 
 ---
-## 3. Construcción de la Matriz $S_{ij}$ (Data Processing)
-Para alimentar el parámetro $S_{ij}$, se utiliza el historial de tickets del año anterior:
 
-1.  Se agrupan los datos por `(Ingeniero, Servicio)`.
-2.  Si `count > 0` (o un umbral mínimo, ej. > 3 veces), entonces $S_{ij} = 1$.
-3.  Caso contrario, $S_{ij} = 0$.
+## Interpretación de Resultados
+El modelo matemático entregará la mejor asignación posible dadas las restricciones. Para la toma de decisiones gerenciales, se clasificará a cada ingeniero según su **Carga Final ($L_i$)** y las **Horas Extra ($HE_i$)**:
+
+| Estado | Indicador Matemático | Acción Recomendada |
+| :--- | :--- | :--- |
+| **🔴 CRÍTICO (Sobreocupado)** | $HE_i > 0$ **Ó** $L_i = C_i$ | **Riesgo de Burnout.** Revisar si es posible reasignar tareas o si se requiere contratar personal de apoyo. |
+| **🟢 EQUILIBRADO (Óptimo)** | $L_i \approx T$ ($\pm 10\%$) | **Gestión Correcta.** El ingeniero tiene una carga justa comparada con el resto del equipo. |
+| **🟡 SUBOCUPADO (Disponible)** | $L_i < T - 10\%$ | **Ineficiencia.** El ingeniero tiene horas libres pero no puede tomar tareas pendientes (posible falta de Skills). **Acción:** Plan de Capacitación (Upskilling). |
+
+### Ejemplo de Salida del Sistema
+> **Ingeniero A (Senior):** 45 horas asignadas ($C_i=40$). $HE_i=5$. -> **🔴 CRÍTICO**
+> **Ingeniero B (Mid):** 38 horas asignadas ($C_i=40$). $HE_i=0$. -> **🟢 EQUILIBRADO**
+> **Ingeniero C (Junior):** 20 horas asignadas ($C_i=40$). $HE_i=0$. -> **🟡 SUBOCUPADO**
+
+*Conclusión del Ejemplo:* El Ingeniero A está saturado porque es el único que sabe hacer ciertas tareas críticas, mientras el Ingeniero C está libre porque le faltan habilidades. La solución no es matemática, es de capacitación.*
+
+---
