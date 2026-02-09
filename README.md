@@ -3,6 +3,62 @@
 ## Contexto del Problema
 El objetivo de este modelo es optimizar la distribución de horas y tareas entre el equipo de ingeniería de infraestructura. Se busca evitar tanto la sobreutilización (riesgo de burnout y errores) como la subutilización (ineficiencia de recursos), asegurando que la carga de trabajo asignada se acerque lo más posible a un "Target Ideal" de operación.El modelo considera no solo las horas nominales, sino un factor de peso ($\alpha$) que representa la complejidad cognitiva o criticidad del servicio.
 
+Para ello, el planteamiento se divide en 2 problemas de optimizacion (fase 1 y 2):
+
+# Fase 1: Calibración de Complejidad de Servicios (Optimization Model)
+
+## 1. Descripción del Problema
+
+En operaciones de infraestructura, las horas estándar teóricas ($H_j$) raramente coinciden con la realidad operativa debido a factores ocultos.
+
+El objetivo de este modelo es encontrar el **Factor de Complejidad Real ($\alpha_j$)** para cada servicio, utilizando datos históricos. Se busca minimizar la discrepancia entre la carga teórica calculada y la carga real reportada por los ingenieros.
+
+---
+
+## 2. Definicion Matematica
+
+### 2.1 Conjuntos e Índices
+* **$J$**: Conjunto de Servicios o Tipos de Tarea ($j = 1, \dots, n$).
+* **$K$**: Conjunto de Observaciones Históricas ($k = 1, \dots, m$).
+    * *PD: Cada observación $k$ representa un registro consolidado (ej. "Ingeniero $i$ en el Mes $t$").*
+
+### 2.2 Parámetros (Inputs)
+Son los datos pre-procesados provenientes del historial operativo.
+
+* **$A_{kj}$ (Carga Teórica Nominal):**
+  Total de horas estándar que la observación $k$ debió tomar para el servicio $j$.
+  $$A_{kj} = (\text{Conteo Tickets}_{kj}) \times (\text{Tiempo Estándar Esperado} H_j)$$
+
+* **$B_k$ (Carga Real Reportada):**
+  Total de horas que el ingeniero registró realmente en la observación $k$ (Timesheet).
+
+### 2.3 Variables de Decisión
+* **$\alpha_j$**: Factor de peso/complejidad del servicio $j$ (Variable Continua).
+* **$\epsilon_k$**: Variable auxiliar de error para la observación $k$ (Variable Continua, $\epsilon_k \ge 0$).
+
+---
+
+## 3. Planteamiento del Modelo (Linear Programming)
+
+### Función Objetivo
+**Minimizar la Suma del Error Absoluto (Mean Absolute Error - MAE).**
+Buscamos que la curva de carga teórica se ajuste lo mejor posible a la realidad histórica.
+
+$$
+\text{Min } Z = \sum_{k \in K} \epsilon_k
+$$
+
+### Restricciones
+
+#### A. Linealización del Error Absoluto
+1.  **Cota Superior:**
+    $$\sum_{j \in J} (A_{kj} \cdot \alpha_j) - B_k \leq \epsilon_k \quad \forall k \in K$$
+
+2.  **Cota Inferior:**
+    $$B_k - \sum_{j \in J} (A_{kj} \cdot \alpha_j) \leq \epsilon_k \quad \forall k \in K$$
+
+
+
 ## Definición del Modelo Matemático
 
 ### Conjuntos e Indices
