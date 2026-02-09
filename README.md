@@ -133,7 +133,7 @@ Un ingeniero solo puede tomar un servicio si tiene la habilidad para hacerlo.
 
 $$x_{ij} \leq S_{ij} \quad \forall i \in I, \forall j \in J$$
 
-*(Si $S_{ij}=0$, obligamos a $x_{ij}$ a ser 0).*
+*Si $S_{ij}=0$, obligamos a $x_{ij}$ a ser 0.*
 
 2. **Cobertura Total:**
 
