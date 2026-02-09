@@ -57,7 +57,30 @@ $$
 2.  **Cota Inferior:**
     $$B_k - \sum_{j \in J} (A_{kj} \cdot \alpha_j) \leq \epsilon_k \quad \forall k \in K$$
 
+#### B. Restricciones de Negocio:
 
+3.  **Límite de Consistencia Operativa:**
+    Se evita que el modelo asigne pesos irreales (0 o infinitos). Un servicio no puede costar menos de la mitad ni más del triple de su estándar.
+    $$0.5 \leq \alpha_j \leq 5.0 \quad \forall j \in J$$
+
+- $\alpha = 0.5$: Tareas triviales o altamente automatizadas (tardan la mitad de lo estimado).
+- $\alpha = 1.0$: Estimación precisa.
+- $\alpha = 5.0$: Tareas críticas o mal dimensionadas (tardan hasta 5 veces más de lo estimado).
+
+---
+
+## 4. Interpretación de Resultados
+Al resolver este modelo, obtenemos un vector de **Alphas ($\alpha$)**:
+
+* **$\alpha_j \approx 1.0$**: El servicio está bien dimensionado.
+* **$\alpha_j > 1.0$**: El servicio es más complejo de lo documentado (posible deuda técnica).
+* **$\alpha_j < 1.0$**: El servicio está automatizado o sobreestimado en papel.
+
+*Estos valores se utilizarán como constantes fijas en la **Fase 2 (Asignación de Carga)**.*
+
+# Fase 2: Asignacion de Cargas
+
+---
 
 ## Definición del Modelo Matemático
 
