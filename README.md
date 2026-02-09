@@ -51,17 +51,22 @@ $$
 ### Restricciones
 
 #### A. Linealización del Error Absoluto
+
 1.  **Cota Superior:**
-    $$\sum_{j \in J} (A_{kj} \cdot \alpha_j) - B_k \leq \epsilon_k \quad \forall k \in K$$
+
+$$\sum_{j \in J} (A_{kj} \cdot \alpha_j) - B_k \leq \epsilon_k \quad \forall k \in K$$
 
 2.  **Cota Inferior:**
-    $$B_k - \sum_{j \in J} (A_{kj} \cdot \alpha_j) \leq \epsilon_k \quad \forall k \in K$$
+
+$$B_k - \sum_{j \in J} (A_{kj} \cdot \alpha_j) \leq \epsilon_k \quad \forall k \in K$$
 
 #### B. Restricciones de Negocio:
 
 3.  **Límite de Consistencia Operativa:**
-    Se evita que el modelo asigne pesos irreales (0 o infinitos). Un servicio no puede costar menos de la mitad ni más del triple de su estándar.
-    $$0.5 \leq \alpha_j \leq 5.0 \quad \forall j \in J$$
+
+Se evita que el modelo asigne pesos irreales (0 o infinitos). Un servicio no puede costar menos de la mitad ni más del triple de su estándar.
+
+$$0.5 \leq \alpha_j \leq 5.0 \quad \forall j \in J$$
 
 - $\alpha = 0.5$: Tareas triviales o altamente automatizadas (tardan la mitad de lo estimado).
 - $\alpha = 1.0$: Estimación precisa.
@@ -122,42 +127,37 @@ $$
 
 **Restricciones:**
 
-1.  **Restricción de Competencia (Skills):**
-    Un ingeniero solo puede tomar un servicio si tiene la habilidad para hacerlo.
+1. **Restricción de Competencia (Skills):**
 
-    $$
-    x_{ij} \leq S_{ij} \quad \forall i \in I, \forall j \in J$$
-    *(Si $S_{ij}=0$, obligamos a $x_{ij}$ a ser 0).*
-    $$
+Un ingeniero solo puede tomar un servicio si tiene la habilidad para hacerlo.
 
-2.  **Cobertura Total:**
-    Cada servicio debe tener un responsable.
+$$x_{ij} \leq S_{ij} \quad \forall i \in I, \forall j \in J$$
 
-    $$
-    \sum_{i \in I} x_{ij} = 1 \quad \forall j \in J
-    $$
+*(Si $S_{ij}=0$, obligamos a $x_{ij}$ a ser 0).*
 
-3.  **Capacidad con Holgura (Overtime):**
-    La carga asignada no puede superar la capacidad, salvo emergencia (Horas Extra).
+2. **Cobertura Total:**
 
-    $$
-    \sum_{j \in J} (x_{ij} \cdot W_j) \leq C_i + HE_i \quad \forall i \in I
-    $$
+Cada servicio debe tener un responsable.
 
-4.  **Balanceo (Cálculo de Desviación):**
+$$\sum_{i \in I} x_{ij} = 1 \quad \forall j \in J$$
+
+3. **Capacidad con Holgura (Overtime):**
+
+La carga asignada no puede superar la capacidad, salvo emergencia (Horas Extra).
+
+$$\sum_{j \in J} (x_{ij} \cdot W_j) \leq C_i + HE_i \quad \forall i \in I$$
+
+4. **Balanceo (Cálculo de Desviación):**
+
 * Caso A (Carga superior al promedio):
 
-    $$
-    \sum_{j \in J} (x_{ij} \cdot W_j) - T \leq d_i
-    $$
+$$\sum_{j \in J} (x_{ij} \cdot W_j) - T \leq d_i$$
 
 * Caso B (Carga inferior al promedio):
 
-    $$
-    T - \sum_{j \in J} (x_{ij} \cdot W_j) \leq d_i
-    $$
+$$T - \sum_{j \in J} (x_{ij} \cdot W_j) \leq d_i$$
 
-** Dominio de Variables**
+### Dominio de Variables
 
 $$x_{ij} \in \{0, 1\}, \quad d_i \geq 0, \quad HE_i \geq 0$$
 
