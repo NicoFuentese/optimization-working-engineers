@@ -78,9 +78,9 @@ Al resolver este modelo, obtenemos un vector de **Alphas ($\alpha$)**:
 
 *Estos valores se utilizarán como constantes fijas en la **Fase 2 (Asignación de Carga)**.*
 
-# Fase 2: Asignacion de Cargas
-
 ---
+
+# Fase 2: Asignacion de Cargas
 
 ## Definición del Modelo Matemático
 
